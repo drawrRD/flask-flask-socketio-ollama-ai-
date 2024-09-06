@@ -12,7 +12,7 @@ from practice01.views.chatroom import bp as ct_bp
 def create_app():
     app = Flask(__name__)
     # 服务器端配置为ProSetting， 本机测试为TestSetting
-    app.config.from_object(settings.ProSettings)
+    app.config.from_object(settings.TestSettings)
 
     app.register_blueprint(au_bp)
     app.register_blueprint(qa_bp)
@@ -45,3 +45,5 @@ def create_app():
         return render_template('index.html', questions=questions)
 
     return app
+
+
