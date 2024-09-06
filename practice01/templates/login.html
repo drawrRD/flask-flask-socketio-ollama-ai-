@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}论坛-登录{% endblock %}
+
+{% block head %}{% endblock %}
+
+{% block body %}
+<div class="row mt-4">
+    <div class="col"></div>
+    <div class="col">
+        <form method="POST">
+            <div class="form-group">
+                <label for="exampleInputEmail1">邮箱</label>
+                <input type="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" name="email" required>
+            </div>
+
+            <div class="form-group">
+                <label for="exampleInputPassword1">密码</label>
+                <input type="password" name="password" class="form-control" id="exampleInputPassword1" required>
+            </div>
+
+            <div class="form-group">
+                <label for="captcha">验证码</label>
+                <div class="d-flex align-items-center">
+                    <input type="text" name="captcha" class="form-control" id="captcha" placeholder="请输入验证码" required>
+                    <img src="{{ url_for('authority.get_captcha') }}" alt="captcha" style="width: 100px;" id="captchaImage">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary btn-block">立即登录</button>
+            </div>
+        </form>
+    </div>
+    <div class="col"></div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const captchaImage = document.getElementById('captchaImage');
+
+        captchaImage.onclick = function () {
+            // 获取当前的 captcha 图片 URL
+            const currentUrl = "{{ url_for('authority.get_captcha') }}";
+            // 通过 AJAX 请求获取新的 captcha 图片
+            fetch(currentUrl)
+                .then(response => response.blob())
+                .then(blob => {
+                    const imageUrl = URL.createObjectURL(blob);
+                    captchaImage.src = imageUrl;
+                })
+                .catch(error => {
+                    console.error('Error refreshing captcha:', error);
+                });
+        };
+    });
+</script>
+
+{% endblock %}
