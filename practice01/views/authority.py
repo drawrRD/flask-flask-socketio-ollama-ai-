@@ -4,12 +4,14 @@ from io import BytesIO
 
 import requests
 from captcha.image import ImageCaptcha
-from flask import Blueprint, render_template, request, jsonify, redirect, session, Response, send_file
+from flask import Blueprint, render_template, request, jsonify, redirect, session, Response, send_file, current_app
 from flask_mail import Message
 from werkzeug.security import generate_password_hash, check_password_hash
+
 from config.extends import db, mail, redis
 from ORM.models import User
 from ORM.forms import RegisterForm, LoginForm
+
 
 bp = Blueprint('authority', __name__, url_prefix='/')
 
@@ -105,18 +107,6 @@ def logout():
     return redirect('/')
 
 
-
-
-@bp.route('/mail/test')
-def mail_test():
-    # message = Message(subject='邮箱测试', recipients=['*****@gmail.com'], body='这是一条测试邮件from flask-mail')
-    # mail.send(message)
-    return '邮件发送成功！'
-
-@bp.route('/ollama/test')
-def ollama_test():
-    return render_template('ai-chat.html')
-
 @bp.route('/ai/chat', methods=['GET', 'POST'])
 def ai_chat():
     if request.method == 'GET':
@@ -157,3 +147,52 @@ def ai_chat():
 
         # 返回流式响应
         return Response(generate_streamed_response(), content_type='application/json')
+
+@bp.route('/mail-celery/test')
+def mail_test():
+    try:
+        # message = Message(subject='邮箱测试', recipients=['kerb6368@gmail.com'], body='这是一条测试邮件from flask-mail')
+        recipient = ''
+        subject = "邮箱测试"
+        body = "这是一条测试邮件from flask-mail,测试内容：celery"
+        my_celery = current_app.celery
+        my_celery.send_task("test-sleep", (recipient, subject, body))
+        return "已成功执行！"
+    except Exception as e:
+        print(e)
+        return "测试错误！"
+
+@bp.route('/ollama/test')
+def ollama_test():
+    return render_template('ai-chat.html')
+
+@bp.route('/sleep/test')
+def sleep_test():
+    my_celery = current_app.celery
+    task_id = my_celery.send_task("test_sleep")
+    return f"sleep task has been sent, task-id = {task_id}"
+
+
+@bp.route('/celery/status/<task_id>')
+def task_status(task_id):
+    my_celery = current_app.celery
+    task = my_celery.AsyncResult(task_id)
+    if task.state == 'PENDING':
+        response = {
+            'state': task.state,
+            'result': 'Pending...'
+        }
+    elif task.state != 'FAILURE':
+        response = {
+            'state': task.state,
+            'result': task.info
+        }
+        if 'result' in task.info:
+            response['result'] = task.info['result']
+    else:
+        # something went wrong in the background job
+        response = {
+            'state': task.state,
+            'result': str(task.info),  # this is the exception raised
+        }
+    return jsonify(response)

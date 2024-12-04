@@ -6,17 +6,20 @@ from flask_migrate import Migrate
 
 from config.extends import mail, redis, db, socketio
 from practice01 import create_app
-from flask_cors import CORS
+from tasks import create_celery
 
 app = create_app()
-
 
 db.init_app(app)
 mail.init_app(app)
 redis.init_app(app)
+
 socketio.init_app(app)
 
 migrate = Migrate(app, db)
+
+celery = create_celery(app)
+
 
 if __name__ == '__main__':
     # app.run(host='0.0.0.0', port=5000, debug=True)

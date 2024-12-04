@@ -82,11 +82,9 @@
         let messageBox = document.querySelector('#message-box')
         let leaveroom = document.querySelector('#leaveroom')
 
-
+        let socket = io();
         // 连接
-        var socket = io.connect('http://120.55.56.124');
-
-
+        socket.connect(location.protocol + '//' + document.domain + ':' + location.port);
         // 加入房间
         socket.emit('join', {
             username: username,
